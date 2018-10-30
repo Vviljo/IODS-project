@@ -1,14 +1,16 @@
 ---
 title: "IODS course project"
+author: "Ville"
 output:
   html_document:
-    theme: cosmo
-    toc: true
-    toc_depth: 2
-    fig_caption: true
-    fig_width: 6
-    fig_height: 4
     code_folding: hide
+    css: ~/Desktop/bootstrap.min.css
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 6
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
 ---
 
 ***

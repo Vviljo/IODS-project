@@ -1,4 +1,8 @@
+#IODS-project
+This is a project related to the *MOOC* called **IODS**, which is hosted by Kimmo Vehkalahti.
 
-# About the project
+**The objective of this course is to get familiar with R, RMarkdown and GitHub and to be able to use them in, for example, statistical analysis. The course lasts for 7 weeks. Link to my github repository: https://github.com/vviljo/IODS-project **
 
-*Write a short description about the course and add a link to your github repository here. This is an R markdown (.Rmd) file so you can use R markdown syntax. See the 'Useful links' page in the mooc area (chapter 1) for instructions.*
+More information about this course can be found [here (MOOC.helsinki)](https://mooc.helsinki.fi/course/view.php?id=158) and [here (blogs.helsinki.fi)](https://blogs.helsinki.fi/thinkopen/welcome-open-data-science/).
+
+See also this [useful R Markdown cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf)
