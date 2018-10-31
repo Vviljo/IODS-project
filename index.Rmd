@@ -1,6 +1,6 @@
 ---
 title: "IODS course project"
-author: "Ville"
+author: "Ville Pikkarainen"
 output:
   html_document:
     code_folding: hide

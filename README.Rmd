@@ -2,4 +2,4 @@
 **IODS** (stands for introduction to open data science) is a MOOC that lasts for 7 weeks.
 During the course we learn, among other things, to understand possibilities of open science, visualize and analyze data sets, master some open software tools and to apply the principle of reproducible research.
 
-*Link to my course diary: https://vviljo.github.io/IODS-project *
+## Link to my course diary: https://vviljo.github.io/IODS-project
