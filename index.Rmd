@@ -4,11 +4,10 @@ author: "Ville Pikkarainen"
 output:
   html_document:
     code_folding: hide
-    css: ~/Desktop/bootstrap.min.css
     fig_caption: yes
     fig_height: 4
     fig_width: 6
-    theme: cosmo
+    theme: spacelab
     toc: yes
     toc_depth: 2
 ---
