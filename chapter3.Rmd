@@ -1,9 +1,7 @@
-# Logistic Regression
+# 3. Logistic Regression
 
 *This chapter consist of exercises related data wrangling and analysis.*
 However, the code for data wrangling is not presented here as instructed. After some house keeping, the exercise is divided to 8 parts. The contents of these parts are introduced in the beginning of each part. First part refers to creating this .Rmd-file, so I start with part 2 in the analysis.
-
-## Data analysis
 
 I start with some house keeping and calling the packages used later in the exercise.
 ```{r house keeping, eval=FALSE}
@@ -13,7 +11,7 @@ library(ggplot2)
 library(GGally)
 ```
 
-### Part 2: Importing data + brief overview
+## Part 2: Importing data + brief overview
 First thing here is to import the joined student alcohol consumption data, after which I print out the names of the variables in the data and describe the data set briefly.
 
 ```{r}
@@ -33,12 +31,12 @@ The dataset "alc" includes 382 rows (observations) and 35 columns (variables). T
 The original dataset is described as follows: 
 "This data approach student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por)." (https://archive.ics.uci.edu/ml/datasets/Student+Performance)"
 
-#### Source of the data
+### Source of the data
 The source of the data: https://archive.ics.uci.edu/ml/machine-learning-databases/00320/ (Paulo Cortez, University of Minho, GuimarÃ£es, Portugal, http://www3.dsi.uminho.pt/pcortez)
 (more information about the data: https://archive.ics.uci.edu/ml/datasets/Student+Performance)
 The dataset "alc" used in this chapter is wrangled from the source mentioned above.
 
-### Part 3: Hypotheses about relationships between various variables and high alcohol consumption
+## Part 3: Hypotheses about relationships between various variables and high alcohol consumption
 In this part I briefly speculate about 4 variables having a relationship with high alcohol consumption. Below I present 4 hypothesis. Disclaimer: the hypothesis are to give only some reasoning about the relationship and they are not intended to cover all the relevant mechanisms as it wasn't the task here.
 
 * "absences": I expect high alcohol consumption to have a positive relationship with the number of school absences as consuming alcohol causes hangover, which makes it less pleasant to go to school. Also, choosing to consume a lot of alcohol indicates that the student's preferences are heavily affected by instant gratifications as he/she is willing to sacrifice tomorrows utility for today's utility. Using the same logic, as going to school could be interpreted as sacrificing todays's utility for tomorrow's, I'd expect the alcohol-preferring student to skip school.
@@ -46,12 +44,12 @@ In this part I briefly speculate about 4 variables having a relationship with hi
 * "G3": I expect grades to have a negative relationship with high alcohol consumption as consuming alcohol is associated with worse skills in coping with delayed gratification and as high alcohol consumption causes hangovers which makes it harder to study for exams etc.
 * "failures": This is a similar variable as "G3" and "absences" in the way that I expect high alcohol consumption to have a negative relationship with performance in school: thus, I expect a positive relationship with number of past class failures and high alcohol consumption as consumption may signal low motivation for various reasons, cause hangovers that affect performance etc.
 
-### Part 4: Numerical and graphical exploration of distributions of variables and their relationships with alcohol consumption
+## Part 4: Numerical and graphical exploration of distributions of variables and their relationships with alcohol consumption
 
-### Part 5: Statistical analysis: logistic regression
+## Part 5: Statistical analysis: logistic regression
 
-### Part 6: Exploring the predictive power of the model
+## Part 6: Exploring the predictive power of the model
 
-### Part 7: Bonus: 10-fold cross-validation
+## Part 7: Bonus: 10-fold cross-validation
 
-### Part 8: Super-Bonus: Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors). 
+## Part 8: Super-Bonus: Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors). 

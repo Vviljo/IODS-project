@@ -1,9 +1,8 @@
-# Regression and model validation
+# 2. Regression and model validation
 
 *This chapter consist of exercises related data wrangling and analysis.*
 However, the code for data wrangling is not presented here as instructed. After some house keeping, the exercise is divided to 5 parts. The contents of these parts are introduced in the beginning of each part.
 
-## Data analysis
 
 I start with some house keeping and calling the packages used later in the exercise.
 ```{r House keeping}
@@ -12,7 +11,7 @@ library(dplyr)
 library(ggplot2)
 library(GGally)
 ```
-### Part 1: Importing data + brief overview
+## Part 1: Importing data + brief overview
 Here I start by importing the data that I produced in the data wrangling section.
 Studying the data with functions dim() and str() reveal that the dataset includes 166 rows (observations) and 7 columns (variables).
 Also, the data frame includes variables "gender" (factor), "age" (int), "attitude"(int),"deep"(num),"stra"(num),"surf"(num) and "points"(int). These things in the brackets describe the type of the variable.
@@ -28,7 +27,7 @@ str(students2014)
 #the data frame includes variables "gender" (factor), "age" (int), "attitude"(int),"deep"(num),"stra"(num),"surf"(num) and "points"(int)
 ```
 
-### Part 2: More detailed description about the data
+## Part 2: More detailed description about the data
 This dataset is based on http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt
 For more detailed information about the data and variables in the original dataset used for data wrangling, please see http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-meta.txt
 The data was originally collected as a questionnaire related to teaching and learning, and the questionnaire was done as an international research project made possible by Opettajien akatemiea (teachers' academy). 
@@ -67,7 +66,7 @@ summary(students2014)
 ```
 Studying the output of summary()-function we see the exact number of women (110) and men (56) in the sample and we learn about the distributions of variables. For example, average age in the sample is 25,51 while the youngest person in the sample was 17 and the oldest was 55.
 
-### Part 3: linear model: choosing variables, interpretation and p-values 
+## Part 3: linear model: choosing variables, interpretation and p-values 
 
 In this part we study our linear model with exam points ("points") as a dependent variable. In the first model ("my_model"), the explanatory variables are "attitude", "stra" and "surf". These variables are chosen as they have highest correlation (in absolute values) with our dependent variable.
 
@@ -82,30 +81,30 @@ summary(my_model)
 ```
 Summary of our linear model suggests that in our model only the intercept and variable "attitude" have statistical significance (with P<0.01) in explaining "points". 
 
-##### Interpretation of coefficients
+#### Interpretation of coefficients
 The coefficients are interpreted such that an unit change in our explanatory variable is associated with a change size of the coefficient in the dependent variable ("points"). For example, one unit increase in "attitude" is associated with approximately 0.33 increase in exam points. Similarly, one unit increase in "stra"" is associated with 0.85 increase and one unit increase in "surf" is associated with 0.58 *decrease* in exam points.
 
-##### Statistical tests related to the model parameters
+#### Statistical tests related to the model parameters
 The P-values indicate how likely (or unlikely) it is that our coefficients are different from zero. The null hypothesis (H0) is that the coefficients equal zero and the lower the p-value, the higher the chance that the real value of the coefficient differs from zero and the null hypothesis is rejected.
 
-##### From model 1 to model 2: dropping one variable
+#### From model 1 to model 2: dropping one variable
 As suggested in instructions, I remove variable "surf" from the model as it is not statistically significant. *The instructions were slightly ambivalent if I should remove one of non-significant variables or both. I chose to remove only one.* "surf" was chosen to be removed as it had lower correlation with "points" in absolute values and it is also further away from being statistically significant. The new model is called "my_model2". Interpretation follows in Part 4.
 
-### Part 4: New linear model, interpretation of coefficients and multiple R-squared
+## Part 4: New linear model, interpretation of coefficients and multiple R-squared
 In this part, we study the new model with two explanatory variables ("attitude" and "stra"), as suggested in the end of Part 3. 
 ```{r}
 # new model without "surf"
 my_model2 <- lm(points ~ attitude + stra, data = students2014)
 summary(my_model2)
 ```
-##### Interpretation of coefficients and multiple R-squared
+#### Interpretation of coefficients and multiple R-squared
 The summary of the new model suggests again that the intercept and variable "attitude" have statistical significance (now with P<0.001). Now, also "stra" is *somewhat* significant (0.05<P<0.10 is still often interpreted as not being statistically significant).
 Now, one unit increase in "attitude" is associated with approximately 0.35 increase in exam points and one unit increase in "stra" is associated with approximately 0.91 increase in exam points.
 Our model has multiple R-squared of 0.2048. The interpretation is that our model explains 20.48% of the variation of our dependent variable (exam points) around its mean. The higher the value, the more variation is explained by our model. 
 
 The problem with R-squared is that it increases when more explanatory variables are added even if the new variables would make no sense. Thus, for multiple variable models Adjusted R-squared is useful as it punishes for adding explanatory variables and suggests adding more variables only if the new variable is really valuable such that the model is improved more than would be expected by chance.
 
-### Part 5: Graphical model validation: diagnostics of the model
+## Part 5: Graphical model validation: diagnostics of the model
 This part focuses on diagnostics of the model and the analysis is based on graphical model validation based on the following plots: Residuals vs Fitted values (first graph), Normal QQ-plot (second graph) and Residuals vs Leverage (third graph).
 ```{r}
 plot(my_model2, which=c(1))
@@ -113,7 +112,7 @@ plot(my_model2, which=c(2))
 plot(my_model2, which=c(5))
 ```
 
-##### Assumptions of our model
+#### Assumptions of our model
 Our model assumes that the relationship between our variables is linear as the dependent variable is modelled as a linear combination of model parameters. We also assume that the residuals
 
 *  are normally distributed (with mean = 0 and variance=sigma^2 (which is constant)) 
@@ -122,12 +121,12 @@ Our model assumes that the relationship between our variables is linear as the d
 
 Analysing the residuals allows us to study the validity of the assumptions.
 
-#### Studying the assumptions
+### Studying the assumptions
 
-#### Constant variance of errors: Residuals vs Fitted values
+### Constant variance of errors: Residuals vs Fitted values
 The size of the errors should not depend on the explanatory variables. To inspect this, we look and the first graph (Residuals vs Fitted values), in which there seems to be a reasonably random spread and no significant patterns. This suggests that the size of the errors does not depend on the explanatory variables.
 
-##### Normally distributed residuals: Normal QQ-plot
+#### Normally distributed residuals: Normal QQ-plot
 QQ-plot is used to study if the errors are normally distributed. In the second graph we see that our residuals fall pretty well to the line even though in the tails of the graph we see some deviations.The interpretation in our case is that the assumption of normally distributed errors is fairly reasonable.
 
 #### Leverage of observations: Residuals vs Leverage
