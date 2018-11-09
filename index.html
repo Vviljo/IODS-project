@@ -149,6 +149,9 @@ $(document).ready(function () {
 <li><a href="#regression-and-model-validation">Regression and model validation</a><ul>
 <li><a href="#data-analysis">Data analysis</a></li>
 </ul></li>
+<li><a href="#logistic-regression">Logistic Regression</a><ul>
+<li><a href="#data-analysis-1">Data analysis</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -364,6 +367,106 @@ summary(my_model2)</code></pre>
 <p>They seem to hold pretty well as suggested by the previous subsections.</p>
 <hr />
 </div>
+</div>
+</div>
+</div>
+<div id="logistic-regression" class="section level1">
+<h1>Logistic Regression</h1>
+<p><em>This chapter consist of exercises related data wrangling and analysis.</em> However, the code for data wrangling is not presented here as instructed. After some house keeping, the exercise is divided to 8 parts. The contents of these parts are introduced in the beginning of each part. First part refers to creating this .Rmd-file, so I start with part 2 in the analysis.</p>
+<div id="data-analysis-1" class="section level2">
+<h2>Data analysis</h2>
+<p>I start with some house keeping and calling the packages used later in the exercise.</p>
+<pre class="r"><code>rm(list=ls()) 
+library(dplyr)
+library(ggplot2)
+library(GGally)</code></pre>
+<div id="part-2-importing-data-brief-overview" class="section level3">
+<h3>Part 2: Importing data + brief overview</h3>
+<p>First thing here is to import the joined student alcohol consumption data, after which I print out the names of the variables in the data and describe the data set briefly.</p>
+<pre class="r"><code>alc &lt;- read.table(&quot;alc.txt&quot;, sep=&quot;,&quot;) 
+#names of variables
+names(alc)</code></pre>
+<pre><code>##  [1] &quot;school&quot;     &quot;sex&quot;        &quot;age&quot;        &quot;address&quot;    &quot;famsize&quot;   
+##  [6] &quot;Pstatus&quot;    &quot;Medu&quot;       &quot;Fedu&quot;       &quot;Mjob&quot;       &quot;Fjob&quot;      
+## [11] &quot;reason&quot;     &quot;nursery&quot;    &quot;internet&quot;   &quot;guardian&quot;   &quot;traveltime&quot;
+## [16] &quot;studytime&quot;  &quot;failures&quot;   &quot;schoolsup&quot;  &quot;famsup&quot;     &quot;paid&quot;      
+## [21] &quot;activities&quot; &quot;higher&quot;     &quot;romantic&quot;   &quot;famrel&quot;     &quot;freetime&quot;  
+## [26] &quot;goout&quot;      &quot;Dalc&quot;       &quot;Walc&quot;       &quot;health&quot;     &quot;absences&quot;  
+## [31] &quot;G1&quot;         &quot;G2&quot;         &quot;G3&quot;         &quot;alc_use&quot;    &quot;high_use&quot;</code></pre>
+<pre class="r"><code>#for curiosity, dimensions and structure:
+#dimensions of the data
+dim(alc)</code></pre>
+<pre><code>## [1] 382  35</code></pre>
+<pre class="r"><code># look at the structure of the data
+str(alc)</code></pre>
+<pre><code>## 'data.frame':    382 obs. of  35 variables:
+##  $ school    : Factor w/ 2 levels &quot;GP&quot;,&quot;MS&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ sex       : Factor w/ 2 levels &quot;F&quot;,&quot;M&quot;: 1 1 1 1 1 2 2 1 2 2 ...
+##  $ age       : int  18 17 15 15 16 16 16 17 15 15 ...
+##  $ address   : Factor w/ 2 levels &quot;R&quot;,&quot;U&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ famsize   : Factor w/ 2 levels &quot;GT3&quot;,&quot;LE3&quot;: 1 1 2 1 1 2 2 1 2 1 ...
+##  $ Pstatus   : Factor w/ 2 levels &quot;A&quot;,&quot;T&quot;: 1 2 2 2 2 2 2 1 1 2 ...
+##  $ Medu      : int  4 1 1 4 3 4 2 4 3 3 ...
+##  $ Fedu      : int  4 1 1 2 3 3 2 4 2 4 ...
+##  $ Mjob      : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 1 1 1 2 3 4 3 3 4 3 ...
+##  $ Fjob      : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 5 3 3 4 3 3 3 5 3 3 ...
+##  $ reason    : Factor w/ 4 levels &quot;course&quot;,&quot;home&quot;,..: 1 1 3 2 2 4 2 2 2 2 ...
+##  $ nursery   : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 2 2 2 2 2 2 2 ...
+##  $ internet  : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 2 2 1 2 2 1 2 2 ...
+##  $ guardian  : Factor w/ 3 levels &quot;father&quot;,&quot;mother&quot;,..: 2 1 2 2 1 2 2 2 2 2 ...
+##  $ traveltime: int  2 1 1 1 1 1 1 2 1 1 ...
+##  $ studytime : int  2 2 2 3 2 2 2 2 2 2 ...
+##  $ failures  : int  0 0 2 0 0 0 0 0 0 0 ...
+##  $ schoolsup : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 1 1 1 1 2 1 1 ...
+##  $ famsup    : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 1 2 2 2 1 2 2 2 ...
+##  $ paid      : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 2 2 2 2 1 1 2 2 ...
+##  $ activities: Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 2 1 1 1 2 ...
+##  $ higher    : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ romantic  : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 1 1 1 1 1 ...
+##  $ famrel    : int  4 5 4 3 4 5 4 4 4 5 ...
+##  $ freetime  : int  3 3 3 2 3 4 4 1 2 5 ...
+##  $ goout     : int  4 3 2 2 2 2 4 4 2 1 ...
+##  $ Dalc      : int  1 1 2 1 1 1 1 1 1 1 ...
+##  $ Walc      : int  1 1 3 1 2 2 1 1 1 1 ...
+##  $ health    : int  3 3 3 5 5 5 3 1 1 5 ...
+##  $ absences  : int  5 3 8 1 2 8 0 4 0 0 ...
+##  $ G1        : int  2 7 10 14 8 14 12 8 16 13 ...
+##  $ G2        : int  8 8 10 14 12 14 12 9 17 14 ...
+##  $ G3        : int  8 8 11 14 12 14 12 10 18 14 ...
+##  $ alc_use   : num  1 1 2.5 1 1.5 1.5 1 1 1 1 ...
+##  $ high_use  : logi  FALSE FALSE TRUE FALSE FALSE FALSE ...</code></pre>
+<p>The dataset “alc” includes 382 rows (observations) and 35 columns (variables). The types of variables can be checked from output of str(alc). Most of them are factors and integers with the exceptions of “alc_use” (num) and “high_use” (logical). The names of the variables are listed above.</p>
+<p>The original dataset is described as follows: “This data approach student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por).” (<a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance" class="uri">https://archive.ics.uci.edu/ml/datasets/Student+Performance</a>)&quot;</p>
+<div id="source-of-the-data" class="section level4">
+<h4>Source of the data</h4>
+<p>The source of the data: <a href="https://archive.ics.uci.edu/ml/machine-learning-databases/00320/" class="uri">https://archive.ics.uci.edu/ml/machine-learning-databases/00320/</a> (Paulo Cortez, University of Minho, GuimarÃ£es, Portugal, <a href="http://www3.dsi.uminho.pt/pcortez" class="uri">http://www3.dsi.uminho.pt/pcortez</a>) (more information about the data: <a href="https://archive.ics.uci.edu/ml/datasets/Student+Performance" class="uri">https://archive.ics.uci.edu/ml/datasets/Student+Performance</a>) The dataset “alc” used in this chapter is wrangled from the source mentioned above.</p>
+</div>
+</div>
+<div id="part-3-hypotheses-about-relationships-between-various-variables-and-high-alcohol-consumption" class="section level3">
+<h3>Part 3: Hypotheses about relationships between various variables and high alcohol consumption</h3>
+<p>In this part I briefly speculate about 4 variables having a relationship with high alcohol consumption. Below I present 4 hypothesis. Disclaimer: the hypothesis are to give only some reasoning about the relationship and they are not intended to cover all the relevant mechanisms as it wasn’t the task here.</p>
+<ul>
+<li>“absences”: I expect high alcohol consumption to have a positive relationship with the number of school absences as consuming alcohol causes hangover, which makes it less pleasant to go to school. Also, choosing to consume a lot of alcohol indicates that the student’s preferences are heavily affected by instant gratifications as he/she is willing to sacrifice tomorrows utility for today’s utility. Using the same logic, as going to school could be interpreted as sacrificing todays’s utility for tomorrow’s, I’d expect the alcohol-preferring student to skip school.</li>
+<li>“famrel”: I expect that family relations have a negative correlation with high alcohol consumption as good family relations could mean that the parents protect the student from using alcohol and as bad relationships with family may be a driver for consuming alcohol and not being at home.</li>
+<li>“G3”: I expect grades to have a negative relationship with high alcohol consumption as consuming alcohol is associated with worse skills in coping with delayed gratification and as high alcohol consumption causes hangovers which makes it harder to study for exams etc.</li>
+<li></li>
+</ul>
+</div>
+<div id="part-4-numerical-and-graphical-exploration-of-distributions-of-variables-and-their-relationships-with-alcohol-consumption" class="section level3">
+<h3>Part 4: Numerical and graphical exploration of distributions of variables and their relationships with alcohol consumption</h3>
+</div>
+<div id="part-5-statistical-analysis-logistic-regression" class="section level3">
+<h3>Part 5: Statistical analysis: logistic regression</h3>
+</div>
+<div id="part-6-exploring-the-predictive-power-of-the-model" class="section level3">
+<h3>Part 6: Exploring the predictive power of the model</h3>
+</div>
+<div id="part-7-bonus-10-fold-cross-validation" class="section level3">
+<h3>Part 7: Bonus: 10-fold cross-validation</h3>
+</div>
+<div id="part-8-super-bonus-perform-cross-validation-to-compare-the-performance-of-different-logistic-regression-models-different-sets-of-predictors." class="section level3">
+<h3>Part 8: Super-Bonus: Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors).</h3>
+<hr />
 </div>
 </div>
 </div>

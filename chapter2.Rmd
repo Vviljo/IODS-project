@@ -42,9 +42,6 @@ p1 <- ggplot(students2014, aes(x = attitude, y = points, col=gender))
 # define the visualization type (points)
 p2 <- p1 + geom_point()
 
-# draw the plot
-p2
-
 # add a regression line
 p3 <- p2 + geom_smooth(method = "lm")
 
