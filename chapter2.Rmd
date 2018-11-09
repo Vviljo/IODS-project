@@ -116,7 +116,7 @@ plot(my_model2, which=c(5))
 ##### Assumptions of our model
 Our model assumes that the relationship between our variables is linear as the dependent variable is modelled as a linear combination of model parameters. We also assume that the residuals
 
-*  are normally distributed (with \mu = 0 and \sigma^2 (which is constant)) 
+*  are normally distributed (with mean = 0 and variance=sigma^2 (which is constant)) 
 
 *  are not correlated and that the size of a given error does not depend on the explanatory variables. 
 
