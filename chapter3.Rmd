@@ -1,18 +1,20 @@
 # 3. Logistic Regression
 
 *This chapter consist of exercises related data wrangling and analysis.*
-However, the code for data wrangling is not presented here as instructed. After some house keeping, the exercise is divided to 8 parts. The contents of these parts are introduced in the beginning of each part. First part refers to creating this .Rmd-file, so I start with part 2 in the analysis.
+However, the code for data wrangling is not presented here as instructed, please see it at the github repository. After some house keeping, the exercise is divided to 8 parts. The contents of these parts are introduced in the beginning of each part (and the headers are quite informative too). First part refers to creating this .Rmd-file, so I start with part 2 in the analysis.
+The topic of this chapter is logistic regression, where the dependent (target) variable is discrete.
 
 I start with some house keeping and calling the packages used later in the exercise.
-```{r house keeping, eval=FALSE}
+```{r house keeping, eval=TRUE}
 rm(list=ls()) 
 library(dplyr)
 library(ggplot2)
 library(GGally)
+library(tidyr)
 ```
 
 ## Part 2: Importing data + brief overview
-First thing here is to import the joined student alcohol consumption data, after which I print out the names of the variables in the data and describe the data set briefly.
+First thing here is to import the joined student alcohol consumption data, after which I print out the names of the variables in the data and describe the data set briefly. 
 
 ```{r}
 alc <- read.table("alc.txt", sep=",") 
@@ -26,10 +28,12 @@ str(alc)
 
 ```
 
-The dataset "alc" includes 382 rows (observations) and 35 columns (variables). The types of variables can be checked from output of str(alc). Most of them are factors and integers with the exceptions of "alc_use" (num) and "high_use" (logical). The names of the variables are listed above.
+The dataset "alc" includes 382 rows (observations) and 35 columns (variables). The types of variables can be checked from output of str(alc). Most of them are factors and integers with the exceptions of "alc_use" (num) and "high_use" (logical). The names of the variables are listed above. The dataset was imported from working directory as "alc.txt" was created earlier in the data wrangling part.
 
 The original dataset is described as follows: 
 "This data approach student achievement in secondary education of two Portuguese schools. The data attributes include student grades, demographic, social and school related features) and it was collected by using school reports and questionnaires. Two datasets are provided regarding the performance in two distinct subjects: Mathematics (mat) and Portuguese language (por)." (https://archive.ics.uci.edu/ml/datasets/Student+Performance)"
+
+In short, the dataset is a combination of two sets and it contains results of a questionnaire that is later used to study the relationship between alcohol consumption and school performance among other things while taking account various aspects listed above. (Please note that some of the more detailed description of variables and data is provided later in Part 4!)
 
 ### Source of the data
 The source of the data: https://archive.ics.uci.edu/ml/machine-learning-databases/00320/ (Paulo Cortez, University of Minho, GuimarÃ£es, Portugal, http://www3.dsi.uminho.pt/pcortez)
@@ -45,11 +49,215 @@ In this part I briefly speculate about 4 variables having a relationship with hi
 * "failures": This is a similar variable as "G3" and "absences" in the way that I expect high alcohol consumption to have a negative relationship with performance in school: thus, I expect a positive relationship with number of past class failures and high alcohol consumption as consumption may signal low motivation for various reasons, cause hangovers that affect performance etc.
 
 ## Part 4: Numerical and graphical exploration of distributions of variables and their relationships with alcohol consumption
+I use a subset of the full dataset here to illustrate the relationships between the dependent and my choosing of independent variables. To use a subset, I create a data frame called "minialc" from the original "alc" so that I get to study the vatiables of interest and their relationships.
+
+```{r}
+Alc_use<-alc$alc_use
+High_use<-alc$high_use
+Absences<-alc$absences
+Failures<-alc$failures
+G_3<-alc$G3
+Famrel<-alc$famrel
+mini<-cbind(Alc_use, High_use, Absences, Failures, G_3, Famrel)
+minialc<-as.data.frame(mini)
+p <- ggpairs(minialc, mapping = aes(alpha=0.3), lower = list(combo = wrap("facethist", bins = 20)))
+p
+```
+
+Studying this correlogram reveals quite a bit. I start with the interpretation of graphical distributions.
+
+- Alcohol consumption: right-skewed distribution, great majority (more than 50%) report alcohol consumption to be very low. 
+
+- High use of alcohol: logical (binary) variable (true or false), majority don't consume high amounts of alcohol.
+
+- Absences - number of school absences (numeric: from 0 to 93): heavily right-skewed distribution: overwhelming majority report 0 absences.
+
+- Failures- number of past class failures (numeric: n if 1<=n<3, else 4): heavily right-skewed distribution: overwhelming majority report 0 failures.
+
+- G_3 - final grade (numeric: from 0 to 20, output target): The "most normal" distribution among variables in this subset with the median being fairly middle.
+
+- Famrel - quality of family relationships (numeric: from 1 - very bad to 5 - excellent): Likert-scale variable (thus not unimodal), most mass at 4 and the lower values have very small mass.
+
+These descriptions can also be obtained from boxplots, which are probably a bit easier to read (see below), while the correlogram (above) gives other useful information too.
+
+```{r}
+gather(minialc) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free")+geom_bar()
+```
+
+**Numerically, the correlogram shows that the direction of my hypothesis in part 3 were correct.** 
+
+However, what is surprising in my opinion, is that the correlations with "Alc_use"" were fairly small in absolute values. Absences has clearly highest correlation (in absolute values) with alcohol usage (0.215) while others are way smaller (Failures 0.185, G_3 -0.156, Famrel -0.121).
+
 
 ## Part 5: Statistical analysis: logistic regression
 
+In this part, I use logistic regression to statistically explore the relationship between my choosing of dependent variables (Failures, Famrel, G_3, Asences) and the binary high/low alcohol consumption variable as the target variable. I present and interpret a summary of the fitted model and the coefficients of the model, and I provide confidence intervals for them. Results are presented and compared with respect to my hypothesis stated in Part 3.
+
+
+```{r}
+m <- glm(high_use ~ failures + absences + famrel + G3, data = alc, family = "binomial")
+summary(m)
+
+```
+Summary of our model shows that among our explanatory variables, only "absences" and "failures" have a statistically significant relationship with "high_use" (p<0.05 -> null hypothesis of coef=0 can be rejected). They also have positive coefficients matching with the hypothesis while "famrel" and "G3" don't have statistical significance although the negative coefficients match with the hypothesis.
+
+```{r}
+# compute odds ratios (OR)
+OR <- coef(m) %>% exp
+
+# compute confidence intervals (CI)
+CI <- confint(m) %>% exp
+
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```
+
+Studying the Odds ratios ("OR" in the table above) informs us that as failures and absences have an OR higher than 1 (1.47 and 1.08, respectively), they are positively associated with high use of alcohol, while ORs lower than one for famrel and G3 are interpreted as they being negatively associated with high use of alcohol. In other words, and being a bit more accurate, the ORs are interpreted as follows: if student has failures, he/she is 1.48 times more likely to consume high amounts of alcohol compared to someone without failures. Other ORs are interpreted accordingly, for example, if a student has a good relationship with his/her family, he is less likely (OR = 0.8 <1) to consume high amounts of alcohol and if a student has high grades (G3), he/she is less likely (0.96 < 1) to consume high amounts of alcohol. NB: "famrel" and "G3" were not statistically significant at p<0.05.
+
+
 ## Part 6: Exploring the predictive power of the model
+
+This part focuses on analysing the predictive power of our new model in which we have dropped "famrel" and "G3" as they were not statistically significant.
+
+```{r}
+# fit the model with only significant variables
+m <- glm(high_use ~ failures + absences, data = alc, family = "binomial")
+
+# predict() the probability of high_use
+probabilities <- predict(m, type = "response")
+
+# add the predicted probabilities to 'alc'
+alc <- mutate(alc, probability = probabilities)
+
+# use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probability > 0.5)
+
+# see the last ten original classes, predicted probabilities, and class predictions
+select(alc, failures, absences, sex, high_use, probability, prediction) %>% tail(10)
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)
+```
+
+Above in our confusion matrix, which shows predictions versus the actual values.
+Below is a graphical visualization of both the actual values and the predictions.
+
+```{r}
+# initialize a plot of 'high_use' versus 'probability' in 'alc'
+g <- ggplot(alc, aes(x = probability, y = high_use,col=prediction))
+
+# define the geom as points and draw the plot
+g+geom_point()
+
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)%>%prop.table%>%addmargins
+```
+
+The table above presents the accuracy of our predictions. From the table we can calculate that our model would be wrong in 28.5% of all cases (high use is FALSE and model predicts TRUE and vice versa). While the percentage is not the highest, it is way better than guessing randomly with equal weights. However, if one would predict "FALSE" every single time, one would be right with probability of 67.5%. Happily though, our model outperforms this guessing strategy too, which shows that our method has some value.
+
 
 ## Part 7: Bonus: 10-fold cross-validation
 
+```{r}
+# define a loss function (average prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+# compute the average number of wrong predictions in the (training) data
+loss_func(alc$high_use, alc$probability)
+
+# 10-fold cross-validation
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m, K = 10)
+
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```
+
+Average prediction error of our model is 0.285, which means that in our training data our model gets 28.5% of predictions wrong on average. Then again, in cross-validation, average number of wrong predictions with 10-fold cross-validation is 0.296, which is higher than our rate for wrong predictions in our training data. 
+
+Comparing this to the results in DataCamp-exercise, my model has worse test set performance (bigger prediction error using 10-fold cross-validation) compared to the model introduced in DataCamp (which had about 0.26 error).
+
+Next I try to see if I could find a model with smaller prediction error than 0.26 using a larger model.
+I do this by adding some variables to my original model, namely "famrel", "G3", "guardian", "sex", "higher", "Pstatus", "Medu" and "Fedu".
+
+```{r}
+# fit the model with only significant variables
+m2 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher + Pstatus + Medu + Fedu, data = alc, family = "binomial")
+cv2 <- cv.glm(data = alc, cost = loss_func, glmfit = m2, K = 10)
+cv2$delta[1]
+```
+
+With this larger model, depending on the simulation, I get average number of wrong predictions in the 10-fold cross-validation from approximately 0.253 to 0.272, so it is not clear if this model performs better in prediction than the DataCamp model. In some simulations it does, and it performs better than my original model at least.
+
+(((This implies that our model generalizes fairly well to independent data set as the difference in our average prediction error with the training data doesn't differ much from the estimated wrong predictions in our cross-validation. In other words, our predictive model does relatively well in practice (=unseen data).)))
+
+
+
 ## Part 8: Super-Bonus: Perform cross-validation to compare the performance of different logistic regression models (= different sets of predictors). 
+
+In this section I fit different numbers of variables to my logistic model and perform same analysis round after round dropping one variable every time. Then I compare the performance of these models in terms of the 10-fold cross-validation. First, I create the new models and calculate the estimated wrong predictions and then I plot this to graphically see if there is a trend.
+
+```{r}
+m10 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher + Pstatus + Medu + Fedu, data = alc, family = "binomial")
+cv10 <- cv.glm(data = alc, cost = loss_func, glmfit = m10, K = 10)
+pe10<-cv10$delta[1]
+pe10
+
+
+m9 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher + Pstatus + Medu, data = alc, family = "binomial")
+cv9 <- cv.glm(data = alc, cost = loss_func, glmfit = m9, K = 10)
+pe9<-cv9$delta[1]
+pe9
+
+m8 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher + Pstatus, data = alc, family = "binomial")
+cv8 <- cv.glm(data = alc, cost = loss_func, glmfit = m8, K = 10)
+pe8<-cv8$delta[1]
+pe8
+
+
+m7 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher, data = alc, family = "binomial")
+cv7 <- cv.glm(data = alc, cost = loss_func, glmfit = m7, K = 10)
+pe7<-cv7$delta[1]
+pe7
+
+m6 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex, data = alc, family = "binomial")
+cv6 <- cv.glm(data = alc, cost = loss_func, glmfit = m6, K = 10)
+pe6<-cv6$delta[1]
+pe6
+
+m5 <- glm(high_use ~ failures + absences + famrel + G3+ guardian, data = alc, family = "binomial")
+cv5 <- cv.glm(data = alc, cost = loss_func, glmfit = m5, K = 10)
+pe5<-cv5$delta[1]
+pe5
+
+m4 <- glm(high_use ~ failures + absences + famrel + G3, data = alc, family = "binomial")
+cv4 <- cv.glm(data = alc, cost = loss_func, glmfit = m4, K = 10)
+pe4<-cv4$delta[1]
+pe4
+
+m3 <- glm(high_use ~ failures + absences + famrel, data = alc, family = "binomial")
+cv3 <- cv.glm(data = alc, cost = loss_func, glmfit = m3, K = 10)
+pe3<-cv3$delta[1]
+pe3
+
+m2 <- glm(high_use ~ failures + absences, data = alc, family = "binomial")
+cv2 <- cv.glm(data = alc, cost = loss_func, glmfit = m2, K = 10)
+pe2<-cv2$delta[1]
+pe2
+
+m1 <- glm(high_use ~ failures, data = alc, family = "binomial")
+cv1 <- cv.glm(data = alc, cost = loss_func, glmfit = m1, K = 10)
+pe1<-cv1$delta[1]
+pe1
+pe<-c(pe1, pe2,pe3, pe4, pe5, pe6,pe7,pe8,pe9,pe10)
+x=c(1:10, pe)
+plot(pe, type="b")
+
+```
+
+It seems that with a larger number of predictors the average prediction error gets smaller (observation at index = 10 refers to the average prediction error of a model with 10 predictors etc.). The interpretation here would be roughly such that the prediction is more accurate the more variables we fit to our model.
+
+The trend is not linear in the graph as the errors represent a result from a single simulation and maybe repeating the simulations and averaging them could give us a better idea about how the average prediction errors behave with different number of predictors.
