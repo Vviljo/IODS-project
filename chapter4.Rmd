@@ -74,7 +74,8 @@ corrplot(cor_matrix, method="circle", type="upper", cl.pos="b",tl.pos="d", tl.ce
 
 ```
 
-Going through the descriptions of all the correlations here would be tiresome. To make this easier, correlations between variables are plotted above with corrplot()-function. Correlations always get values between -1 and 1, where 1 refers to a situation in which variables are (perfectly) positively correlated and they move together hand in hand, and -1 refers to a situation where variables move together oppositely: when one decreases the other increases. In the graph above, the bigger the correlation in absolute values, the larger the circle. Red color refers to a negative correlation and blue color refers to a positive correlation. The darker the color, the stronger the correlation. 
+Going through the descriptions of all the distributions and correlations here would be tiresome. To make this easier, pairs() function and summary gives an understanding about the distributions of the variables while correlations between variables are plotted above with corrplot()-function. 
+Correlations always get values between -1 and 1, where 1 refers to a situation in which variables are (perfectly) positively correlated and they move together hand in hand, and -1 refers to a situation where variables move together oppositely: when one decreases the other increases. In the graph above, the bigger the correlation in absolute values, the larger the circle. Red color refers to a negative correlation and blue color refers to a positive correlation. The darker the color, the stronger the correlation. Just to name a few, "tax" and "rad" have a strong positive correlation (0.91) such that the full-value property-tax rate is high in areas with good access to radial highways whereas "nox" and "dis" have a strong negative correlation (-0.77) such that the levels of pollution are high close to the five Boston employment centres.
 
 ## Part 4: Standardizing the data, creating a categorial variable and train and test sets 
 
@@ -156,11 +157,11 @@ classes <- as.numeric(train$crime)
 
 # plot the lda results
 plot(lda.fit, dimen = 2, col=classes, pch=classes)
-lda.arrows(lda.fit, myscale = 3)
+lda.arrows(lda.fit, myscale = 2)
 
 ```
 
-Accurate description for the biplot is not given here as it is a topic of next chapter of the IODS-project.
+Accurate description for the biplot is not given here as it is a topic of next chapter of the IODS-project. However, the biplot suggests that the most influencial linear separators for the clusters are "rad", "nox" and "zn" as their arrows are the longest in the graph shown above. In short, this means that index of accessibility to radial highways, the nitrogen oxides concentration (parts per 10 million) and the proportion of residential land zoned for lots over 25,000 sq.ft. are the most influencial factors that separate our three classes from each other.
 
 ## Part 6: Predicting classes with the LDA model
 
@@ -231,17 +232,22 @@ pairs(Boston, col = km1$cluster)
 The optimal number of clusters is when the total of within cluster sum of squares (total WCSS) drops radically. Studying the qplot suggests that the optimal number could therefore be 2. The qplot show how the total WCSS behaves when the number of cluster changes.
 
 Running the algorithm again and plotting the results gives us the graph of the scaled Boston dataset with 2 clusters (red and black).
+Interpreting the plot above suggests that compared to the red cluster, the black cluster is categorized by more crime ("crim"), higher levels of pollution ("nox"), closer proximity to railways ("rad").
 
 ## Bonus: Finding the most influencial linear separators for the clusters
 
 Here we do the clustering again but with a larger number of clusters (>2) for the scaled Boston dataset.
-The qplot suggests that if not 2 clusters are used, 3 could be a good choice as well. Thus, I set number of clusters to 3 according to qplot.
+The qplot suggests that if not 2 clusters are used, 3 could be a good choice as well. The line drops quite evenly after 2 so that a larger number of clusters might also be justified. Thus, I set number of clusters to 3 according to qplot.
 
 ```{r}
 library(MASS)
 data('Boston')
 bostonscaled<-scale(Boston)
 bostonscaled<-as.data.frame(bostonscaled)
+
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
 # k-means clustering
 set.seed(123)
 
@@ -261,10 +267,11 @@ pairs(bostonscaled, col = km$cluster)
 
 ```
 
+Graph above illustrates the differences between the clusters.
 Now that the number of clusters is set to 3, I run the LDA again using the clusters as target classes and including all the variables in the Boston dataset to the model.
 
 ```{r}
-lda.fit2 <- lda(km$cluster ~. -chas, data = bostonscaled)
+lda.fit2 <- lda(km$cluster ~., data = bostonscaled)
 
 # the function for lda biplot arrows
 lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
@@ -276,16 +283,16 @@ lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0
        cex = tex, col=color, pos=3)
 }
 
-# target classes as numeric
-classes <- as.numeric(train$crime)
+
+
 
 # plot the lda results
 plot(lda.fit2, dimen = 2, col=classes, pch=classes)
-lda.arrows(lda.fit2, myscale = 2)
+lda.arrows(lda.fit2, myscale = 3)
 
 ```
 
-Fitting the LDA model again and studying the biplot suggests that the most influencial linear separators for the clusters are "tax" and "indus" as their arrows are the longest in the graph shown above. In short, this means that the proportion of non-retail business acres per town and full-value property-tax rate per \$10,000 are the most influencial factors that separate our three classes from each other.
+Fitting the LDA model again and studying the biplot suggests that the most influencial linear separators for the clusters are "rad", "tax" and "age" as their arrows are the longest in the graph shown above. In short, this means that index of accessibility to radial highways,full-value property-tax rate per \$10,000 and the proportion of owner-occupied units built prior to 1940 are the most influencial factors that separate our three classes from each other.
 
 
 ## Super bonus: matrix product and 3D-plot
@@ -303,7 +310,7 @@ matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
 matrix_product <- as.data.frame(matrix_product)
 
 plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=train$crime)
-#tried this: plot_ly(x = matrix_product1$LD1, y = matrix_product1$LD2, z = matrix_product1$LD3, type= 'scatter3d', mode='markers', color=km$cluster)
+#tried this:plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color=km$cluster)
 
 ```
 The dimensions of the model_predictors dataset are 404 and 13. The first 3D-plot is created using plotply-package with colors assigned according to "crime" (categorical variable created earlier). In the second 3D-plot the colors should be assigned according to the clusters found using kmeans-method. I had an error in this part so that only the first 3D-plot could be created and the plots wont be compared here.
