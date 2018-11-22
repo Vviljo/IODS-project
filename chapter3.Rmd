@@ -200,7 +200,7 @@ With this larger model, depending on the simulation, I get average number of wro
 
 In this section I fit different numbers of variables to my logistic model and perform same analysis round after round dropping one variable every time. Then I compare the performance of these models in terms of the 10-fold cross-validation. First, I create the new models and calculate the estimated wrong predictions and then I plot this to graphically see if there is a trend.
 
-```{r}
+```{r echo=TRUE}
 m10 <- glm(high_use ~ failures + absences + famrel + G3+ guardian + sex + higher + Pstatus + Medu + Fedu, data = alc, family = "binomial")
 cv10 <- cv.glm(data = alc, cost = loss_func, glmfit = m10, K = 10)
 pe10<-cv10$delta[1]
