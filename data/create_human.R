@@ -27,14 +27,14 @@ summary(gii) #summary of variables in gii
 names(hd)
 names(gii)
 
-colnames(hd) <- c("hdirank","country","hdi","lifeexp","eduexp","edumean","gni","gniminusrank")
-colnames(gii) <- c("giirank", "country", "gii","matmor","adobirth","parlrep","edu2F","edu2M","labF","labM","edu2FM")
+colnames(hd) <- c("HDI.Rank","Country","HDI","Life.Exp","Edu.Exp","Edu.Mean","GNI","GNI.Minus.Rank")
+colnames(gii) <- c("GII.Rank", "Country", "GII","Mat.Mor","Ado.Birth","Parli.F","Edu2.F","Edu2.M","Labo.F","Labo.M")
 
 #Create two new variables: ratio of female and male populations with secondary education in each country. (i.e. edu2F / edu2M). The second new 
 #variable should be the ratio of labour force participation of females and males in each country (i.e. labF / labM).
 
-gii <- mutate(gii, edu2FM = edu2F/edu2M)
-gii <- mutate(gii, labFM = labF/labM)
+gii <- mutate(gii, Edu2.FM = Edu2.F/Edu2.M)
+gii <- mutate(gii, Labo.FM = Labo.F/Labo.M)
 
 #Joining together the two datasets using the variable "country" as the identifier. 
 #Keep only the countries  in both data sets (Hint: inner join). 
@@ -42,7 +42,7 @@ gii <- mutate(gii, labFM = labF/labM)
 #Call the new joined data "human" and save it in your data folder.
 head(gii)
 
-human <- inner_join(hd, gii, by = "country")
+human <- inner_join(hd, gii, by = "Country")
 str(human) 
 #dataset "human" has 195 obs. of  19 variables
 
