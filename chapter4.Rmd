@@ -4,6 +4,7 @@ In this chapter I study "Boston" dataset from the MASS package. The chapter star
 
 Part of this exercise includes data wrangling for next chapter, which is not commented here. For the data wrangling, see the github repository.
 
+
 ## Analysis 
 
 The chapter is divided to subsections (Part 2 - Part 7 + bonus). Each subsection has a brief introduction to inform about its content.

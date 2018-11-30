@@ -1,0 +1,205 @@
+# 5. Dimensionality reduction techniques
+
+In this chapter I study dimensionality reduction techniques. The chapter starts with an introduction to the dataset while the focus is on Principal Component Analysis (PCA).
+This chapter is divided to data wrangling and analysis.
+
+##Data wrangling and a brief introduction to the data
+
+This section starts with introduction to the data from UNDP and proceeds with some wrangling and cleaning of the data. The data wrangling is included in the "create_human.R" file that can be accessed [here](https://github.com/Vviljo/IODS-project/blob/master/data/create_human.R). To see the code, please use the link. The file includes comments on the steps taken but in short what I do there is the following:
+
+The "human.txt" data created previously is wrangled such that the Gross National Income (GNI) variable is numeric.
+
+Next step here is to exclude unneeded variables such that I keep only the following columns:  "Country", "Edu2.FM", "Labo.FM", "Edu.Exp", "Life.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F". After this, I remove all rows with missing values. Also, as suggested by tail()-function, the "human" dataset includes observations which relate to regions instead of countries, namely the last 7 rows. I remove them from the dataset.
+
+Last things here with respect to the data wrangling are to define the row names of the data by the country names and remove the country name column from the data. The data should now have 155 observations and 8 variables, which I check with str()-function. The new dataset is called "human_" and the corresponding .txt file is called "human.txt" such that the earlier version of "human.txt" is not available anymore although it can be accessed by running only the first part of the "create_human.R" file.
+
+### About the dataset
+
+The data originates from the United Nations Development Programme (see: http://hdr.undp.org/en/content/human-development-index-hdi). 
+
+The wrangled version of the dataset consists of 155 observations of 8 variables that are:
+
+* **Edu2.FM** : the ratio of female and male populations with secondary education in each country
+* **Labo.FM** : the ratio of labour force participation of females and males in each country
+* **Life.Exp** : life expectancy at birth
+* **Edu.Exp** : Expected years of schooling (years)
+* **GNI** : The gross national income
+* **Mat.Mor** :The maternal mortality ratio
+* **Ado.Birth** : the adolescent birth rate
+* **Parli.F** : the share of parliamentary seats held by women
+```{r}
+rm(list=ls()) 
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(tidyr)
+library(MASS)
+library(corrplot)
+human_ <- read.table("human.txt")
+str(human_)
+
+```
+## Analysis 
+
+The chapter is divided to subsections (Part 1 - Part 5). Each subsection has a brief introduction to inform about its content.
+
+
+## Part 1: a graphical overview of the data and summaries of the variables in the data
+
+To get a more accurate understanding about the variables used later in this chapter I study the correlations and distributions of the variables introduced in the previous section.
+
+```{r}
+summary(human_)
+ggpairs(human_)
+```
+
+The summaries give an idea about the distributions of the variables: for example, the variables are not scaled here so there are huge differences in the means. This is partly because some of the variables are ratios and others aren't. Just to point out a couple of things, the summaries show that in the adolescent birth rate the differences between countries are quite staggering and while the median is "only" 33.6, maximum is very much bigger at 204.8. Also, the share of women in parliament is 20.91% on average with a maximum of 57.5% while there is at least one country with zero women in parliament.
+
+Studying the ggpairs()-plot gives a more accurate picture of the data as it plots the data and distributions and shows the correlations between the variables. In short, while the first half of the variables (Edu2.FM, Labo.FM, Life.Exp and Edu.Exp) have negative skewness the latter half is quite heavily positively skewed. 
+
+To visualize the correlations more accurately, let's look at the corrplot() below.
+```{r}
+cor(human_)
+res1 <- cor.mtest(human_, conf.level = .95)
+cor(human_) %>% corrplot(p.mat = res1$p, method = "color", type = "upper",
+         sig.level = c(.001, .01, .05), pch.cex = .9,
+         insig = "label_sig", pch.col = "white", order = "AOE")
+```
+
+This visualization shows the correlations between variables. The interpretation is as follows: deep blue color indicates a strong positive correlation and dark red incidates strong negative correlation. The lighter the color, the weaker (closer to zero) the correlation. For example, the share of women in parliament correlates very weakly with other variables as does the ratio of labour force participation of females and males in each country. The strongest positive correlation is between Life.Exp and Edu.Exp (0.79) while the strongest negative correlation is between Mat.Mor and Life.Exp (-0.86).
+
+## Part 2: Principal Component Analysis (PCA) on non-standardized dataset
+
+In this section, I perform principal component analysis (PCA) on the not standardized human data and show the variability captured by the principal components. I also draw a biplot displaying the observations by the first two principal components.
+
+The idea of PCA is explained later in this chapter in Part 4 among the interpretations!
+
+
+```{r}
+# create and print out a summary of pca_human
+pca_human_ <- prcomp(human_)
+s <- summary(pca_human_)
+s
+
+# rounded percetanges of variance captured by each PC
+pca_pr <- 100*round(1*s$importance[2, ], digits = 3)
+
+# print out the percentages of variance
+pca_pr
+
+# create object pc_lab to be used as axis labels
+pc_lab<-paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human_, cex = c(0.8, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+
+
+```
+
+As suggested by the PCA, the first component captures basically all of the variance here. Keep in mind, that the data is not standardized and thus PCA performs very badly. This is due to the staggering differences in the scales of variables: as some of the variables vary in a very small scale in absolute terms, others vary on a much larger scale. Here, the variable GNI is very heavily affecting the PC1. 
+This part illustrates the problems of using PCA without standardizing the data and thus no further meaningful interpretations are provided as they would be very uninformative.
+
+## Part 3: Standardizing the data and performing PCA again + interpretations and comparisons
+
+This section continues working with the PCA after standardizing the data. After running the PCA, I compare the findings to those from Part 2.
+
+```{r}
+# standardize the variables
+human_std <- scale(human_)
+# print out summaries of the standardized variables
+summary(human_std)
+# create and print out a summary of pca_human
+pca_human <- prcomp(human_std)
+s <- summary(pca_human)
+s
+
+# rounded percetanges of variance captured by each PC
+pca_pr <- 100*round(1*s$importance[2, ], digits = 3)
+
+# print out the percentages of variance
+pca_pr
+
+# create object pc_lab to be used as axis labels
+pc_lab<-paste0(names(pca_pr), " (", pca_pr, "%)")
+
+# draw a biplot
+biplot(pca_human, cex = c(0.6, 1), col = c("grey40", "deeppink2"), xlab = pc_lab[1], ylab = pc_lab[2])
+```
+
+Standardizing the data before PCA makes a lot of sense. As explained above in Part 2, the staggering differences in the scales of variables cause a lot of harm unless they are standardized as some of the variables vary in a very small scale in absolute terms while others vary on a much larger scale. PCA is sensitive to the relative scaling of the original features and assumes that features with larger variance are more important than features with smaller variance. This is also the explanation for why the results are very different. Here in the PCA with standardized variables the first principal component (PC1) captures 53.6% of all variation (not 100% like in the non standardized PCA above), the PC2 captures 16.2% and PC3 9.6% of all variation. The latter principal components also capture some variation (around 20% total).
+
+In the biplot above, the scatter plot illustrates where the observations are represented by two principal components while the arrows are drawn to visualize the connections between the original variables and the principal components.  The interpretation of the arrows is the following:
+
+* The angle between the arrows can be interpret as the correlation between the variables.
+For example, the share of parliamentary seats held by women  (Parli.F) has the strongest positive correlation with  the ratio of labour force participation of females and males in each country (Labo.FM).
+
+* The angle between a variable and a PC axis can be interpret as the correlation between the two.
+For example,   the adolescent birth rate (Ado.Birth) correlates positively with the first principal component (PC1).
+
+* The length of the arrows are proportional to the standard deviations of the variables.
+For example, the ratio of labour force participation of females and males in each country (Labo.FM) has a greater standard deviation than the share of parliamentary seats held by women (Parli.F).
+
+
+## Part 4: Interpretations of the first two principal component dimensions based on the biplot
+
+The idea of PCA is to reduce the dimensions of the dataset such that it constructs new characteristics that  summarize the data in a meaningful way: the new characteristics are constructed such that they explain as much of the variance in the data as possible with the first principal component explaining the more than any other component, the second explaining less than the first but more than the third etc, and the PCs are orthogonal to each other. These new characteristics (the PCs) are constructed using the variables in the dataset. 
+
+Studying the biplot given in Part 3 and looking at the arrows of the variables with respect to the principal components it appears that the PC1 is heavily constructed on the basis of Mat.Mor, Ado.Birth, Edu.Exp, Edu2.FM, Life.Exp and GNI while PC2 is more or less defined by Parli.F and Labo.FM. This is suggested by the directions of the arrows as explained in Part 3: the angle between a variable and a PC axis can be interpret as the correlation between the two and those variables strongly correlated to the PC1 have a smaller angle with respect to the x-axis (PC1) while those correlated heavily with PC2 have a smaller angle with respect to y-axis (PC2).
+
+In other words, the factors heavily defining (although the others also define this as well but not that heavily) PC1 explain most of the variance in the dataset (53.6%) while the second principal component, which explains 16.2% of the variance, is more dominated by Labo.FM and Parli.F. Thus, while the principal components don't have a straight forward interpretation apart from their statistical properties, the first principal component seems to deal with factors related to development in a broader scale and could be interpreted as a development PC, the second PC is much more closely related to the role of women and therefore could be interpreted as a women PC.
+
+## Part 5: Multiple Correspondence Analysis on the tea data and interpretations
+
+This section focuses on Multiple Correspondence Analysis (MCA) and the dataset "tea_time" is fetched from FactoMineR package. As PCA, MCA is also a dimensionality reduction technique. As in PCA, the goal is to detect and represent underlying structures in a dataset. MCA works well with categorical variables and it can also be used with qualitative data.
+
+I start by looking at the structure and the dimensions of the data after which I visualize it.
+
+First, after fetching the data, I choose my variables of interest by picking only the columns "Tea", "How", "how", "sugar", "where", "lunch". After this, I print the summaries and visualize the dataset. The dataset tea_time includes 300 observations of 6 variables.
+
+```{r}
+library(FactoMineR)
+library(tidyr)
+library(dplyr)
+data("tea")
+# choosing column names to keep in the dataset
+#the columns are chosen this way (not using "select()"-function as in DataCamp, because there is a problem when MASS-package and dplyr are both used since they both have a select()-function. However, this way gives same results as I just pick those columns from "tea" that I wish to use later.)
+tea_time = tea[, c("Tea", "How", "how", "sugar", "where", "lunch")]
+# look at the summaries and structure of the data
+summary(tea_time)
+str(tea_time)
+#as with using select()-function, picking the columns from "tea" to "tea_time" gives the same data, which is confirmed by str().
+
+# visualize the dataset
+gather(tea_time) %>% ggplot(aes(value)) + facet_wrap("key", scales = "free") +geom_bar()+theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 8))
+
+```
+
+The graph above gives a nice understanding about the nature of the variables, which are categorical. MCA is a nice tool here as PCA doesn't work well with categorical variables. 
+
+Next, I execute the MCA.
+
+```{r}
+# multiple correspondence analysis
+mca <- MCA(tea_time, graph = FALSE)
+
+# summary of the model
+summary(mca)
+```
+
+The summary of the MCA shows the variances and the percentages of variances for the dimensions. As in the PCA, also in MCA the first dimension explains more of the variance than the rest, the second less than the first but more than the rest etc.
+
+The first dimension explains here 15.2% of the variance while the second explains 14.2% and the third 12.0% etc., as shown in the summary.
+
+
+
+```{r}
+# visualize MCA
+plot(mca, invisible=c("ind"), habillage="quali")
+
+```
+
+The visualization of the MCA gives a measure of similarity of the variables as a distance between them. In other words, the biplot gives an idea about the similarities between the variables. For example, "tea bag" and "chain store" are more similar than "tea bag" and "lemon". 
+
+Notice that here the categories belonging to one variable have the same color, for example "tea bag", "unpacked" and "tea bag+unpackaged" are the categories of the "how" variable and thus they are all green in the graph.
+
+The graph shows that the most significant outliers of our data in terms of the first two dimensions (that explain the biggest and the second biggest part of the variance) are "unpacked" and "tea shop".

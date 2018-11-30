@@ -1,8 +1,12 @@
 #Ville Pikkarainen 22.11.2018
 #IODS-project, data wrangling exercise as part of exercise 4, preparing dataset for chapter 5
+#The latter part of this file includes data wrangling for chapter 5
 
 rm(list=ls()) 
 library(dplyr)
+library(stringr)
+library(ggplot2)
+library(GGally)
 #Importing data from UNDPs human development repors
 
 hd <- read.csv("http://s3.amazonaws.com/assets.datacamp.com/production/course_2218/datasets/human_development.csv", stringsAsFactors = F)
@@ -49,6 +53,53 @@ str(human)
 write.table(human, file = "human.txt", , dec=".", sep=",")
 human <- read.table("human.txt", sep = "," , header=TRUE)
 #calling "human"
-human
+
 
 #Everything seems to work!
+
+############################
+############################
+# DATA WRANGLING FOR CHAPTER 5 CONTINUES HERE
+############################
+
+#NOTICE THAT THIS PART CHANGES THE "human.txt" that is used later in Chapter 5.
+
+# Mutate the dataset to get rid of comma in variable GNI
+
+str(human$GNI)
+human <- mutate(human, GNI = str_replace(GNI, ",","") %>% as.numeric ) 
+human$GNI 
+
+
+# Excluding unneeded variables
+colnames(human)
+
+keep <- c("Country", "Edu2.FM", "Labo.FM", "Life.Exp", "Edu.Exp", "GNI", "Mat.Mor", "Ado.Birth", "Parli.F")
+
+# select the 'keep' columns
+human <- select(human, one_of(keep))
+
+head(human) #seems appropriate
+
+# Filter rows with missing values: first finding those rows:
+comp<-complete.cases(human)
+
+# print out the data along with a completeness indicator as the last column
+data.frame(human[-1], comp = complete.cases(human))
+
+# filter out all rows with NA values
+human <- filter(human, comp==TRUE)
+
+dim(human)
+# define the row names of the data by the country names and remove the country name column from the data
+
+tail(human, 10)
+last <- nrow(human) - 7
+human_ <- human[1:last,]
+rownames(human_) <- human_$Country
+
+human_ <- select(human_, -Country)
+dim(human_)
+str(human_)
+# Notice that this dataset has 155 obs. of 8 variables as expected!
+write.table(human_, file = "human.txt")
