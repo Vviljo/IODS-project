@@ -1,3 +1,4 @@
+
 # 6. Analysis of longitudinal data
 
 In this chapter I perform analysis of longitudinal data based on datasets RATS and BPRS. The analysis ought to follow those in the book Multivariate Analysis for the Behavioral Sciences (MABS) for chapters 8 and 9. Before the analysis, some data wrangling is involved.
@@ -27,7 +28,6 @@ library(tidyr)
 library(lme4)
 BPRS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/BPRS.txt", sep  =" ", header = T)
 RATS <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt", stringsAsFactors = F, na.strings = "..")
-
 RATSL<-read.table("RATSL.txt")
 head(RATSL)
 str(RATSL)
@@ -56,15 +56,12 @@ Next, let's study the same thing after standardizing the data. In the standardiz
 ```{r}
 # Scale RATSL, new data RATSL1
 RATSL1 <- RATSL %>%
-  group_by(Time) %>%
-  mutate(scaled_weight=(Weight-mean(Weight))/sd(Weight)) %>%
-  ungroup()
-
+group_by(Time) %>%
+mutate(scaled_weight=(Weight-mean(Weight))/sd(Weight)) %>%
+ungroup()
 glimpse(RATSL1)
-
 # Plot scaled data by groups
 ggplot(RATSL1, aes(x = Time, y = scaled_weight, group=ID, col=Group, linetype=as.factor(ID)))+geom_line()+scale_linetype_manual(values = rep(1:10, times=4))+facet_grid(. ~ Group, labeller = label_both) +theme(legend.position = "none")
-
 ```
 
 From the scaled data it appears that the growth rates seem to be the same among groups.
@@ -75,17 +72,16 @@ Next, means and standard error of groups are studied.
 n <- RATSL1$Time %>% unique() %>% length()
 RATSL1$Group<-factor(RATSL1$Group)
 RATSL2 <- RATSL1 %>%
-  group_by(Group, Time) %>%
-  summarise(mean = mean(Weight), se = sd(Weight)/sqrt(n)) %>%
-  ungroup()
-
+group_by(Group, Time) %>%
+summarise(mean = mean(Weight), se = sd(Weight)/sqrt(n)) %>%
+ungroup()
 #Plot profiles
 ggplot(RATSL2, aes(x = Time, y = mean, linetype = Group, shape = Group)) +
-  geom_line() +
-  geom_point(size=2) +
-  geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.5) +
-  theme(legend.position = c(0.9,0.6)) +
-  scale_y_continuous(name = "mean(Weight) +/- se(Weight)")
+geom_line() +
+geom_point(size=2) +
+geom_errorbar(aes(ymin=mean-se, ymax=mean+se, linetype="1"), width=0.5) +
+theme(legend.position = c(0.9,0.6)) +
+scale_y_continuous(name = "mean(Weight) +/- se(Weight)")
 ```
 
 The plot above suggests that the second group has the highest variation, which is probably driven by the sturdy outlier rat. The second highest variation variation was in the third group and the smallest in the first group. The mean weights grew in all groups and the highest mean is in the third group, second highest in the second group and the smallest in the first group.
@@ -96,22 +92,20 @@ The summary measure analysis of the rats is performed with boxplots. To make the
 
 ```{r}
 RATSL3 <- RATSL %>%
-  filter(Time > 1) %>%
-  group_by(Group, ID) %>%
-  summarise(mean=mean(Weight) ) %>%
-  ungroup()
+filter(Time > 1) %>%
+group_by(Group, ID) %>%
+summarise(mean=mean(Weight) ) %>%
+ungroup()
 #look at the data
 glimpse(RATSL3)
 #structure of the data
 str(RATSL3)
-
 #remove the fat ourlier from group 2
 RATSL4<-filter(RATSL3, mean<550)
-
-ggplot(RATSL4, aes(x = Group, y = mean)) +
-  geom_boxplot() +
-  stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
-  scale_y_continuous(name = "mean(Weight)")
+ggplot(RATSL4, aes(x = as.factor(Group), y = mean)) +
+geom_boxplot() +
+stat_summary(fun.y = "mean", geom = "point", shape=23, size=4, fill = "white") +
+scale_y_continuous(name = "mean(Weight)")
 ```
 
 There still seems to be one outliers in groups 1 and 3. This may explain why the variances in groups 1 and 3 are greater than in group 2. As noted earlier, the groups vary a lot in terms of means.
@@ -122,11 +116,8 @@ In ANOVA, h0 is that the means of the group don't differ from each other, which 
 
 ```{r}
 RATS1 <- read.table("https://raw.githubusercontent.com/KimmoVehkalahti/MABS/master/Examples/data/rats.txt")
-
 RATSL5 <- RATSL3 %>% mutate(Baseline = RATS1$WD1)
-
 fit <- lm(mean ~ Baseline + Group, data = RATSL5)
-
 anova(fit)
 ```
 
@@ -147,6 +138,7 @@ BPRSL<-read.table("BPRSL.txt")
 head(BPRSL)
 str(BPRSL)
 summary(BPRSL)
+BPRSL$treatment <- factor(BPRSL$treatment)
 ```
 
 Let's begin with plotting the data by the groups.
@@ -158,7 +150,6 @@ ggplot(BPRSL, aes(x = week, y = bprs, linetype = as.factor(subject))) +
   facet_grid(. ~ treatment, labeller = label_both) +
   theme(legend.position = "none") + 
   scale_y_continuous(limits = c(min(BPRSL$bprs), max(BPRSL$bprs)))
-
 ```
 
 Not much can be said based on the plots for either of the groups. It seems that the BPRS seems to decrease in time, especially for group 1 on the left. Having so many individuals makes the interpretation based on the plots quite difficult.
@@ -183,9 +174,9 @@ bprsl_ref <- lmer(bprs ~ week + treatment + (1 | subject), data = BPRSL, REML = 
 summary(bprsl_ref)
 ```
 
-From the summary one can see the variances of subjects and the correlation of fixed effects.
+From the summary one can see the variances of subjects and the correlation of fixed effects. Compared to the regular linear model, the coefficients are the same, but the standard errors for "week" and "treatment" are smaller.
 
-Next, both random intercept and random slope are used in the linear model. This allows for the fit of the model for each individual in the data to differ in intercept and in slope. This is used to allow the model to adjust for the individual differences in the subjects’s bprs values and for the different developments during the period.
+Next, both random intercept and random slope are used in the linear model. This allows for the fit of the model for each individual in the data to differ in intercept and in slope. This is used to allow the model to adjust for the individual differences in the subjects's bprs values and for the different developments during the period.
 
 ```{r}
 #Linear mixed effects model with random slope and random intercept
@@ -201,9 +192,34 @@ BPRS_ref2<- lmer(bprs ~ week*treatment+(week | subject), data=BPRSL, REML=FALSE)
 summary(BPRS_ref2)
 ```
 
-ANOVA for random intercept random slope model vs the random slope and random intercept and time*group interaction model.
+ANOVA for random intercept random slope model vs the random slope and random intercept and time*group interaction model. ANOVA suggests that the lower the p-value, the better the fit against the comparison model. Now, depending on where we set the significance level, let's say it's 10%, we can conclude that the model with the interaction term (BPRS_ref2) has better fit than the model without it (BPRS_ref1).
 
 ```{r}
 anova(BPRS_ref2, BPRS_ref1)
 ```
 
+Following the DataCamp exercise, the last thing in this chapter is to plot the actual data and the fitted data for both groups (treatment = 1 (LHS) vs treatment = 2 (RHS)). Like earlier, each individual is represented by it's own line (and color).
+
+```{r}
+Fitted <- fitted(BPRS_ref2)
+BPRSL <- BPRSL %>% mutate(Fitted)
+BPRSL <- mutate(BPRSL, subject2 = ifelse(BPRSL$treatment==2, BPRSL$subject+20, BPRSL$subject)) 
+
+
+ggplot(BPRSL, aes(x = week, y = bprs, group = subject2,col= subject)) + 
+  geom_line(aes(linetype = treatment)) +  
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  scale_x_continuous(name = "Time", breaks = seq(0, 8, 1)) +
+  scale_y_continuous(name = "BPRS") +
+  theme(legend.position = "bottom")
+
+ggplot(BPRSL, aes(x = week, y = Fitted, group = subject2, col= subject)) +
+  geom_line(aes(linetype = treatment)) +  
+  scale_linetype_manual(values = rep(1:10, times=4)) +
+  facet_grid(. ~ treatment, labeller = label_both) +
+  scale_x_continuous(name = "Time", breaks = seq(0, 8, 1)) +
+  scale_y_continuous(name = "Fitted BPRS") +
+  theme(legend.position = "bottom")
+
+```
